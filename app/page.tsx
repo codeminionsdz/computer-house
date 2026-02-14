@@ -1,6 +1,6 @@
 "use client"
 
-import { HeroSliderPro } from "@/components/store/hero-slider"
+import { HeroSliderModern } from "@/components/store/hero-slider"
 import { BrandMarquee } from "@/components/store/brand-marquee"
 import {
   DepartmentsGrid,
@@ -17,7 +17,7 @@ export default function Page() {
     <div className="flex min-h-screen flex-col">
       <StoreNavbar />
       <main className="flex-1">
-        <HeroSliderPro />
+        <HeroSliderModern />
         <BrandMarquee />
         <DepartmentsGrid />
         <FeaturedProducts />
