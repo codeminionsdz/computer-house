@@ -326,20 +326,8 @@ export function ProductEditor({ mode, productId }: ProductEditorProps) {
   const validate = () => {
     const nextErrors: FormErrors = {}
     if (!form.title_fr.trim()) nextErrors.title_fr = "Le titre FR est requis."
-    if (!form.title_ar.trim()) nextErrors.title_ar = "Le titre AR est requis."
-    if (!form.slug.trim()) nextErrors.slug = "Le slug est requis."
     if (!form.department_id) nextErrors.department_id = "Le departement est requis."
     if (!form.category_id) nextErrors.category_id = "La categorie est requise."
-
-    const priceValue = parseNumber(form.price_dzd)
-    if (!Number.isFinite(priceValue) || priceValue < 0) {
-      nextErrors.price_dzd = "Le prix est requis et doit etre positif."
-    }
-
-    const stockValue = parseNumber(form.stock)
-    if (!Number.isFinite(stockValue) || stockValue < 0) {
-      nextErrors.stock = "Le stock est requis et doit etre >= 0."
-    }
 
     setErrors(nextErrors)
     const firstField = Object.keys(nextErrors)[0]
@@ -554,19 +542,27 @@ export function ProductEditor({ mode, productId }: ProductEditorProps) {
         orderedImages.unshift(primary)
       }
 
+      const normalizedTitleFr = form.title_fr.trim()
+      const normalizedTitleAr = form.title_ar.trim() || normalizedTitleFr
+      const normalizedSlug = toSlug(form.slug || normalizedTitleFr)
+      const priceValue = parseNumber(form.price_dzd)
+      const stockValue = parseNumber(form.stock)
+      const compareAtValue = parseNumber(form.compare_at_price_dzd)
+
       const payload = {
-        slug: toSlug(form.slug),
-        title_fr: form.title_fr.trim(),
-        title_ar: form.title_ar.trim(),
+        slug: normalizedSlug,
+        title_fr: normalizedTitleFr,
+        title_ar: normalizedTitleAr,
         description_fr: form.description_fr.trim(),
         description_ar: form.description_ar.trim(),
         brand_id: form.brand_id || undefined,
         department_id: form.department_id,
         category_id: form.category_id!,
-        price_dzd: parseNumber(form.price_dzd),
-        compare_at_price_dzd: form.compare_at_price_dzd ? parseNumber(form.compare_at_price_dzd) : undefined,
+        price_dzd: Number.isFinite(priceValue) && priceValue >= 0 ? priceValue : 0,
+        compare_at_price_dzd:
+          Number.isFinite(compareAtValue) && compareAtValue >= 0 ? compareAtValue : undefined,
         sku: form.sku.trim() || undefined,
-        stock: parseNumber(form.stock),
+        stock: Number.isFinite(stockValue) && stockValue >= 0 ? stockValue : 0,
         is_featured: form.is_featured,
         is_active: form.is_active,
         specs: form.specs
@@ -700,7 +696,7 @@ export function ProductEditor({ mode, productId }: ProductEditorProps) {
                   {errors.title_fr && <p className="text-xs text-destructive">{errors.title_fr}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="title_ar">Titre AR *</Label>
+                  <Label htmlFor="title_ar">Titre AR</Label>
                   <Input
                     id="title_ar"
                     dir="rtl"
@@ -712,7 +708,7 @@ export function ProductEditor({ mode, productId }: ProductEditorProps) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="slug">Slug *</Label>
+                <Label htmlFor="slug">Slug</Label>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <Input
                     id="slug"
@@ -851,7 +847,7 @@ export function ProductEditor({ mode, productId }: ProductEditorProps) {
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="price_dzd">Prix (DZD) *</Label>
+                <Label htmlFor="price_dzd">Prix (DZD)</Label>
                 <Input
                   id="price_dzd"
                   type="number"
@@ -894,7 +890,7 @@ export function ProductEditor({ mode, productId }: ProductEditorProps) {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="stock">Stock *</Label>
+                  <Label htmlFor="stock">Stock</Label>
                   <Input
                     id="stock"
                     type="number"

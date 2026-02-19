@@ -408,11 +408,10 @@ function normalizeEditorPayload(data: ProductEditorPayload) {
 
 function validateProductRequiredFields(data: ProductEditorPayload) {
   if (!data.title_fr?.trim()) return 'Le titre FR est requis.';
-  if (!data.title_ar?.trim()) return 'Le titre AR est requis.';
   if (!data.department_id) return 'Le departement est requis.';
   if (!data.category_id) return 'La categorie est requise.';
-  if (Number.isNaN(data.price_dzd) || data.price_dzd < 0) return 'Le prix est invalide.';
-  if (Number.isNaN(data.stock) || data.stock < 0) return 'Le stock est invalide.';
+  if (!Number.isFinite(data.price_dzd) || data.price_dzd < 0) return 'Le prix est invalide.';
+  if (!Number.isFinite(data.stock) || data.stock < 0) return 'Le stock est invalide.';
   return null;
 }
 
@@ -548,16 +547,16 @@ export async function adminCreateProduct(data: ProductEditorPayload) {
     const normalized = {
       slug,
       title_fr: data.title_fr.trim(),
-      title_ar: data.title_ar.trim(),
+      title_ar: (data.title_ar?.trim() || data.title_fr.trim()),
       description_fr: data.description_fr?.trim(),
       description_ar: data.description_ar?.trim(),
       brand_id: data.brand_id?.trim(),
       department_id: data.department_id,
       category_id: data.category_id,
-      price_dzd: data.price_dzd,
+      price_dzd: Number.isFinite(data.price_dzd) && data.price_dzd >= 0 ? data.price_dzd : 0,
       compare_at_price_dzd: data.compare_at_price_dzd,
       sku: data.sku?.trim(),
-      stock: data.stock,
+      stock: Number.isFinite(data.stock) && data.stock >= 0 ? data.stock : 0,
       is_featured: data.is_featured ?? false,
       is_active: data.is_active ?? true,
       specs: data.specs || [],
@@ -617,19 +616,19 @@ export async function adminUpdateProduct(
     const merged: ProductEditorPayload = {
       slug: data.slug ?? currentProduct.slug,
       title_fr: data.title_fr ?? currentProduct.title_fr,
-      title_ar: data.title_ar ?? currentProduct.title_ar,
+      title_ar: data.title_ar ?? currentProduct.title_ar ?? data.title_fr ?? currentProduct.title_fr,
       description_fr: data.description_fr ?? currentProduct.description_fr ?? '',
       description_ar: data.description_ar ?? currentProduct.description_ar ?? '',
       brand_id: data.brand_id ?? currentProduct.brand_id ?? undefined,
       department_id: data.department_id ?? currentProduct.department_id,
       category_id: data.category_id ?? currentProduct.category_id,
-      price_dzd: data.price_dzd ?? Number(currentProduct.price_dzd),
+      price_dzd: data.price_dzd ?? Number(currentProduct.price_dzd ?? 0),
       compare_at_price_dzd:
         data.compare_at_price_dzd !== undefined
           ? data.compare_at_price_dzd
           : currentProduct.compare_at_price_dzd ?? null,
       sku: data.sku ?? currentProduct.sku ?? undefined,
-      stock: data.stock ?? currentProduct.stock,
+      stock: data.stock ?? Number(currentProduct.stock ?? 0),
       is_featured: data.is_featured ?? currentProduct.is_featured,
       is_active: data.is_active ?? currentProduct.is_active,
       specs: data.specs ?? currentProduct.product_specs ?? [],
@@ -652,16 +651,16 @@ export async function adminUpdateProduct(
     const normalized = {
       slug: newSlug,
       title_fr: merged.title_fr,
-      title_ar: merged.title_ar,
+      title_ar: merged.title_ar?.trim() || merged.title_fr,
       description_fr: merged.description_fr,
       description_ar: merged.description_ar,
       brand_id: merged.brand_id,
       department_id: merged.department_id,
       category_id: merged.category_id,
-      price_dzd: merged.price_dzd,
+      price_dzd: Number.isFinite(merged.price_dzd) && merged.price_dzd >= 0 ? merged.price_dzd : 0,
       compare_at_price_dzd: merged.compare_at_price_dzd,
       sku: merged.sku,
-      stock: merged.stock,
+      stock: Number.isFinite(merged.stock) && merged.stock >= 0 ? merged.stock : 0,
       is_featured: merged.is_featured,
       is_active: merged.is_active,
       specs: merged.specs,
